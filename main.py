@@ -14,6 +14,7 @@ from src.embeddings import (
     LocalEmbedder,
     OpenAIEmbedder,
     _mock_embed,
+    EmbeddingProvider,
 )
 from src.models import Document
 from src.store import EmbeddingStore
@@ -26,6 +27,10 @@ SAMPLE_FILES = [
     "data/chunking_experiment_report.md",
     "data/vi_retrieval_notes.md",
 ]
+
+EMBEDDING_PROVIDER = "EMBEDDING_PROVIDER"
+
+load_dotenv()
 
 
 def load_documents_from_files(file_paths: list[str]) -> list[Document]:
@@ -84,7 +89,8 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
         print(f"  - {doc.id}: {doc.metadata['source']}")
 
     load_dotenv(override=False)
-    provider = os.getenv(EMBEDDING_PROVIDER_ENV, "mock").strip().lower()
+    provider = os.getenv(EMBEDDING_PROVIDER, "mock").strip().lower()
+    print(f"\nEmbedding provider from environment: {provider}")
     if provider == "local":
         try:
             embedder = LocalEmbedder(model_name=os.getenv("LOCAL_EMBEDDING_MODEL", LOCAL_EMBEDDING_MODEL))
@@ -95,7 +101,13 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
             embedder = OpenAIEmbedder(model_name=os.getenv("OPENAI_EMBEDDING_MODEL", OPENAI_EMBEDDING_MODEL))
         except Exception:
             embedder = _mock_embed
-    else:
+    elif provider == os.getenv("EMBEDDING_PROVIDER_LINK", "mock"):
+        try:
+            embedder = EmbeddingProvider(provider_link=provider)
+            print("Embedding provider successfully set to external API")
+        except Exception:
+            embedder = _mock_embed
+    else: 
         embedder = _mock_embed
 
     print(f"\nEmbedding backend: {getattr(embedder, '_backend_name', embedder.__class__.__name__)}")
@@ -120,6 +132,7 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
 
 
 def main() -> int:
+    load_dotenv(override=False)
     question = " ".join(sys.argv[1:]).strip() if len(sys.argv) > 1 else None
     return run_manual_demo(question=question)
 

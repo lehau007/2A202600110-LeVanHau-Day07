@@ -1,5 +1,7 @@
 pytest>=7.0
 python-dotenv>=1.0
+requests
+google-genai>=0.7.0
 
 # Optional manual-demo extras
 # Install local embedder support with:

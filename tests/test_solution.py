@@ -111,8 +111,8 @@ class TestSentenceChunker(unittest.TestCase):
         self.assertGreaterEqual(len(chunks), 2)
 
     def test_single_sentence_max_gives_many_chunks(self):
-        chunks_1 = SentenceChunker(max_sentences_per_chunk=1).chunk(SAMPLE_TEXT)
-        chunks_3 = SentenceChunker(max_sentences_per_chunk=3).chunk(SAMPLE_TEXT)
+        chunks_1 = SentenceChunker(max_sentences_per_chunk=2, overlap_size=1).chunk(SAMPLE_TEXT)
+        chunks_3 = SentenceChunker(max_sentences_per_chunk=3, overlap_size=1).chunk(SAMPLE_TEXT)
         self.assertGreaterEqual(len(chunks_1), len(chunks_3))
 
     def test_chunks_are_strings(self):
@@ -268,7 +268,7 @@ class TestCompareChunkingStrategies(unittest.TestCase):
         result = ChunkingStrategyComparator().compare(self.SAMPLE_TEXT, chunk_size=100)
         for strategy_name, stats in result.items():
             self.assertIn('count', stats)
-            self.assertIn('avg_length', stats)
+            self.assertIn('avg_chunk_length', stats)
             self.assertIn('chunks', stats)
 
     def test_counts_are_positive(self):

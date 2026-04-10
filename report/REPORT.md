@@ -1,8 +1,8 @@
-# Báo Cáo Lab 7: Embedding & Vector Store
+﻿# Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
-**Nhóm:** [Tên nhóm]
-**Ngày:** [Ngày nộp]
+**Họ tên:** Lê Văn Hậu  
+**Nhóm:** (cập nhật theo nhóm thực tế)  
+**Ngày:** 10/4/2026
 
 ---
 
@@ -10,58 +10,63 @@
 
 ### Cosine Similarity (Ex 1.1)
 
-**High cosine similarity nghĩa là gì?**
-> *Viết 1-2 câu:*
+**High cosine similarity nghĩa là gì?**  
+Hai vector embedding có hướng gần nhau, tức là hai đoạn văn bản có nội dung ngữ nghĩa tương tự, dù có thể khác từ vựng.
 
 **Ví dụ HIGH similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao tương đồng:
+- Câu A: Chí Phèo vừa đi vừa chửi.
+- Câu B: Hắn vừa đi vừa chửi và say rượu.
+- Lý do: Cùng mô tả một hành vi, cùng nhân vật, cùng bối cảnh ngữ nghĩa.
 
 **Ví dụ LOW similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao khác:
+- Câu A: Con mèo nằm ngủ trên mái nhà.
+- Câu B: Hệ mặt trời có tám hành tinh.
+- Lý do: Khác hẳn chủ đề, không liên quan ngữ nghĩa.
 
-**Tại sao cosine similarity được ưu tiên hơn Euclidean distance cho text embeddings?**
-> *Viết 1-2 câu:*
+**Vì sao cosine similarity thường phù hợp cho text embeddings hơn Euclidean distance?**  
+Cosine similarity đo hướng thay vì độ lớn vector, nên bền vững hơn khi độ dài câu khác nhau. Điều này phù hợp với mục tiêu so sánh ý nghĩa hơn là so sánh độ dài biểu diễn.
 
 ### Chunking Math (Ex 1.2)
 
-**Document 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
+**Document 10,000 ký tự, chunk_size=500, overlap=50: số chunk?**  
+Công thức:
 
-**Nếu overlap tăng lên 100, chunk count thay đổi thế nào? Tại sao muốn overlap nhiều hơn?**
-> *Viết 1-2 câu:*
+num_chunks = ceil((doc_length - overlap) / (chunk_size - overlap))
+
+Thay số:
+
+num_chunks = ceil((10000 - 50) / (500 - 50)) = ceil(9950 / 450) = ceil(22.11) = 23
+
+**Nếu overlap = 100 thì sao?**  
+num_chunks = ceil((10000 - 100) / (500 - 100)) = ceil(9900 / 400) = ceil(24.75) = 25
+
+Overlap tăng thì số chunk tăng. Đổi lại, ngữ cảnh ở biên chunk được giữ tốt hơn, giúp retrieval chính xác hơn.
 
 ---
 
 ## 2. Document Selection — Nhóm (10 điểm)
 
-### Domain & Lý Do Chọn
+### Domain & lý do chọn
 
-**Domain:** [ví dụ: Customer support FAQ, Vietnamese law, cooking recipes, ...]
+**Domain:** Văn học Việt Nam (Nam Cao)  
+Nhóm chọn domain này vì dữ liệu có chiều sâu nội dung, ngôn ngữ giàu ngữ cảnh, phù hợp để đánh giá retrieval theo chất lượng diễn giải thay vì chỉ keyword đơn giản.
 
-**Tại sao nhóm chọn domain này?**
-> *Viết 2-3 câu:*
-
-### Data Inventory
+### Data Inventory (bộ đã benchmark)
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
+| 1 | chi_pheo.txt | data nội bộ lab | 56,378 | source, extension |
+| 2 | 1_bua_no.txt | data nội bộ lab | 15,811 | source, extension |
+| 3 | quet_nha.txt | data nội bộ lab | 12,419 | source, extension |
+| 4 | trang_sang.txt | data nội bộ lab | 15,929 | source, extension |
+| 5 | tu_cach_mo.txt | data nội bộ lab | 11,769 | source, extension |
 
 ### Metadata Schema
 
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho retrieval? |
-|----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
+| Trường metadata | Kiểu | Ví dụ | Vai trò |
+|----------------|------|-------|---------|
+| source | string | data\\chi_pheo.txt | Truy vết nguồn chunk để kiểm tra grounding |
+| extension | string | .txt | Hỗ trợ lọc theo loại tài liệu |
 
 ---
 
@@ -69,137 +74,137 @@
 
 ### Baseline Analysis
 
-Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
+Chạy ChunkingStrategyComparator trên tài liệu trang_sang.txt với chunk_size=400:
 
-| Tài liệu | Strategy | Chunk Count | Avg Length | Preserves Context? |
-|-----------|----------|-------------|------------|-------------------|
-| | FixedSizeChunker (`fixed_size`) | | | |
-| | SentenceChunker (`by_sentences`) | | | |
-| | RecursiveChunker (`recursive`) | | | |
+| Strategy | Chunk Count | Avg Length |
+|----------|-------------|------------|
+| fixed_size | 42 | 398.79 |
+| sentence | 322 | 97.72 |
+| by_sentences | 322 | 97.72 |
+| recursive | 25 | 631.56 |
 
-### Strategy Của Tôi
+### Strategy tôi chọn cho benchmark retrieval
 
-**Loại:** [FixedSizeChunker / SentenceChunker / RecursiveChunker / custom strategy]
+Trong benchmark hiện tại, mỗi truyện được index như một document đầy đủ (doc-level indexing) để kiểm tra nhanh mức độ định vị tài liệu đúng nguồn trước khi tinh chỉnh chunking sâu hơn.
 
-**Mô tả cách hoạt động:**
-> *Viết 3-4 câu: strategy chunk thế nào? Dựa trên dấu hiệu gì?*
+**Lý do chọn cách này cho vòng benchmark đầu:**
+- Dễ kiểm soát đúng/sai theo nguồn truyện.
+- Giảm nhiễu do nhiều siêu tham số chunking trong lần chạy chuẩn đầu tiên.
+- Phù hợp mục tiêu xác nhận pipeline end-to-end: add dữ liệu, search, gọi LLM, chấm kết quả.
 
-**Tại sao tôi chọn strategy này cho domain nhóm?**
-> *Viết 2-3 câu: domain có pattern gì mà strategy khai thác?*
+### So sánh với baseline
 
-**Code snippet (nếu custom):**
-```python
-# Paste implementation here
-```
+So với chunk-level retrieval, doc-level retrieval cho phép đánh giá nhanh hit-rate theo truyện. Tuy nhiên, độ chính xác chi tiết trong từng đoạn văn sẽ kém hơn khi câu hỏi yêu cầu đoạn rất cụ thể.
 
-### So Sánh: Strategy của tôi vs Baseline
+### So sánh với thành viên khác
 
-| Tài liệu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
-|-----------|----------|-------------|------------|--------------------|
-| | best baseline | | | |
-| | **của tôi** | | | |
-
-### So Sánh Với Thành Viên Khác
-
-| Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
-|-----------|----------|----------------------|-----------|----------|
-| Tôi | | | | |
-| [Tên] | | | | |
-| [Tên] | | | | |
-
-**Strategy nào tốt nhất cho domain này? Tại sao?**
-> *Viết 2-3 câu:*
+Phần này sẽ cập nhật thêm khi tổng hợp đủ kết quả từ các thành viên chạy cùng bộ query trên strategy khác nhau.
 
 ---
 
 ## 4. My Approach — Cá nhân (10 điểm)
 
-Giải thích cách tiếp cận của bạn khi implement các phần chính trong package `src`.
-
 ### Chunking Functions
 
-**`SentenceChunker.chunk`** — approach:
-> *Viết 2-3 câu: dùng regex gì để detect sentence? Xử lý edge case nào?*
-
-**`RecursiveChunker.chunk` / `_split`** — approach:
-> *Viết 2-3 câu: algorithm hoạt động thế nào? Base case là gì?*
+- SentenceChunker: tách câu bằng regex, gom theo số câu tối đa và overlap theo câu.
+- RecursiveChunker: ưu tiên tách theo cấu trúc lớn đến nhỏ, sau đó merge bằng sliding window.
+- compute_similarity: cosine similarity với guard tránh chia cho 0.
 
 ### EmbeddingStore
 
-**`add_documents` + `search`** — approach:
-> *Viết 2-3 câu: lưu trữ thế nào? Tính similarity ra sao?*
-
-**`search_with_filter` + `delete_document`** — approach:
-> *Viết 2-3 câu: filter trước hay sau? Delete bằng cách nào?*
+- add_documents: lưu embedding + metadata cho từng document.
+- search: trả về id, content, score, metadata; sắp xếp giảm dần theo score.
+- search_with_filter: lọc metadata trước rồi mới tính similarity.
+- delete_document: xóa toàn bộ record theo id.
 
 ### KnowledgeBaseAgent
 
-**`answer`** — approach:
-> *Viết 2-3 câu: prompt structure? Cách inject context?*
+- answer: retrieve top-k chunks/docs, tạo prompt dạng Context + Question, gọi LLM để trả lời.
+
+### Benchmark Pipeline mới
+
+Đã thêm pipeline benchmark riêng:
+- Tải 5 truyện trong data.
+- Add vào EmbeddingStore.
+- Chạy 5 câu hỏi benchmark.
+- Gọi LLM Gemini model: gemini-3.1-flash-lite-preview.
+- Tính retrieval_hit_rate và avg_keyword_score.
 
 ### Test Results
 
-```
-# Paste output of: pytest tests/ -v
-```
-
-**Số tests pass:** __ / __
+- Tổng test pass: 43/43.
+- Thời gian chạy gần nhất: 0.16s.
 
 ---
 
 ## 5. Similarity Predictions — Cá nhân (5 điểm)
 
-| Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
-|------|-----------|-----------|---------|--------------|-------|
-| 1 | | | high / low | | |
-| 2 | | | high / low | | |
-| 3 | | | high / low | | |
-| 4 | | | high / low | | |
-| 5 | | | high / low | | |
+Sử dụng MockEmbedder để tính actual score:
 
-**Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
-> *Viết 2-3 câu:*
+| Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
+|------|------------|------------|---------|--------------|-------|
+| 1 | Chi Pheo vua di vua chui. | Han vua di vua chui va say ruou. | high | -0.0892 | Sai |
+| 2 | Ba lao trong Mot bua no bi doi. | Trong Mot bua no, ba lao phai di xin an. | high | 0.1685 | Đúng |
+| 3 | Dien suy nghi ve nghe thuat. | Dien cho rang nghe thuat phai gan voi dau kho doi song. | high | 0.0142 | Một phần |
+| 4 | Con meo nam ngu tren mai nha. | He mat troi co tam hanh tinh. | low | -0.0547 | Đúng |
+| 5 | Lo tu hien lanh thanh de tien. | Su khinh miet cua xa hoi lam Lo tha hoa. | high | -0.0948 | Sai |
+
+**Nhận xét:**  
+MockEmbedder là deterministic hash embedding, không học ngữ nghĩa thật, nên điểm similarity có thể lệch trực giác con người.
 
 ---
 
 ## 6. Results — Cá nhân (10 điểm)
 
-Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạn trong package `src`. **5 queries phải trùng với các thành viên cùng nhóm.**
+### Benchmark Queries & Gold Answers (đã dùng khi chạy benchmark)
 
-### Benchmark Queries & Gold Answers (nhóm thống nhất)
+| # | Query | Gold Answer (tóm tắt) |
+|---|-------|------------------------|
+| 1 | Trong Chí Phèo, nhân vật Chí Phèo mở đầu truyện bằng hành động gì? | Vừa đi vừa chửi trong trạng thái say rượu, bối cảnh làng Vũ Đại |
+| 2 | Trong truyện Một bữa no, bà lão sống bằng cách nào khi tuổi già sức yếu? | Làm việc vặt, xin ăn, sống chật vật trong đói nghèo |
+| 3 | Trong truyện Quét nhà, vì sao cha mẹ của Hồng hay cáu gắt trong giai đoạn khó khăn? | Áp lực nghèo túng, nợ nần, căng thẳng sinh hoạt |
+| 4 | Trong truyện Trăng sáng, Điền thay đổi quan niệm nghệ thuật như thế nào? | Từ mơ mộng thoát ly sang nghệ thuật gắn với đời sống khổ đau |
+| 5 | Trong truyện Tư cách mõ, Lộ bị biến đổi tính cách do những tác động xã hội nào? | Bị khinh miệt, làm nhục, tha hóa dần trong môi trường làng xã |
 
-| # | Query | Gold Answer |
-|---|-------|-------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+### Kết quả chạy benchmark thực tế (Gemini)
 
-### Kết Quả Của Tôi
+- LLM backend: gemini-3.1-flash-lite-preview
+- num_docs_loaded: 5
+- store_size: 5
+- num_cases: 5
+- retrieval_hit_rate: 0.8
+- avg_keyword_score: 0.8167
 
-| # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
-|---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| # | Retrieval hit? | Retrieved sources (top-3) | Keyword score |
+|---|----------------|---------------------------|---------------|
+| 1 | Yes | chi_pheo, trang_sang, tu_cach_mo | 0.3333 |
+| 2 | Yes | quet_nha, tu_cach_mo, 1_bua_no | 0.7500 |
+| 3 | Yes | trang_sang, quet_nha, tu_cach_mo | 1.0000 |
+| 4 | No | 1_bua_no, chi_pheo, quet_nha | 1.0000 |
+| 5 | Yes | trang_sang, tu_cach_mo, chi_pheo | 1.0000 |
 
-**Bao nhiêu queries trả về chunk relevant trong top-3?** __ / 5
+**Top-3 chứa tài liệu đúng nguồn:** 4/5 query.
 
 ---
 
 ## 7. What I Learned (5 điểm — Demo)
 
-**Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> *Viết 2-3 câu:*
+### Failure case chính
 
-**Điều hay nhất tôi học được từ nhóm khác (qua demo):**
-> *Viết 2-3 câu:*
+- Query: Trăng sáng, Điền thay đổi quan niệm nghệ thuật như thế nào?
+- Vấn đề: top-3 retrieval không chứa đúng nguồn trang_sang trong lần chạy này.
+- Dù vậy, câu trả lời LLM vẫn đúng ý do kiến thức văn học tổng quát và ngữ cảnh từ tài liệu khác có nội dung gần.
 
-**Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
-> *Viết 2-3 câu:*
+### Nguyên nhân khả dĩ
+
+- Đang index theo doc-level, chưa chunk theo đoạn để tách rõ các luận điểm nghệ thuật.
+- Embedding backend hiện tại chưa chuyên cho tiếng Việt văn học dài.
+
+### Hướng cải thiện
+
+- Chuyển sang chunk-level indexing với RecursiveChunker.
+- Bổ sung metadata theo tác phẩm/nhân vật/chủ đề để filter trước retrieval.
+- Thử reranker sau bước vector search để tăng độ chính xác top-1.
 
 ---
 
@@ -207,12 +212,12 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | Tiêu chí | Loại | Điểm tự đánh giá |
 |----------|------|-------------------|
-| Warm-up | Cá nhân | / 5 |
-| Document selection | Nhóm | / 10 |
-| Chunking strategy | Nhóm | / 15 |
-| My approach | Cá nhân | / 10 |
-| Similarity predictions | Cá nhân | / 5 |
-| Results | Cá nhân | / 10 |
-| Core implementation (tests) | Cá nhân | / 30 |
-| Demo | Nhóm | / 5 |
-| **Tổng** | | **/ 100** |
+| Warm-up | Cá nhân | 5 / 5 |
+| Document selection | Nhóm | 10 / 10 |
+| Chunking strategy | Nhóm | 13 / 15 |
+| My approach | Cá nhân | 10 / 10 |
+| Similarity predictions | Cá nhân | 5 / 5 |
+| Results | Cá nhân | 9 / 10 |
+| Core implementation (tests) | Cá nhân | 30 / 30 |
+| Demo | Nhóm | 4 / 5 |
+| **Tổng** | | **86 / 100 (tạm thời theo kết quả hiện có)** |
