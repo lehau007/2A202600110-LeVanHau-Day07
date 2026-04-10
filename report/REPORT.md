@@ -1,7 +1,7 @@
 ﻿# Báo Cáo Lab 7: Embedding & Vector Store
 
 **Họ tên:** Lê Văn Hậu  
-**Nhóm:** (cập nhật theo nhóm thực tế)  
+**Nhóm:** (Cập nhật theo thực tế)
 **Ngày:** 10/4/2026
 
 ---
@@ -119,6 +119,14 @@ Luồng benchmark và agent đã hỗ trợ filter qua search_with_filter.
 - search_with_filter lọc metadata trước khi tính similarity.
 - delete_document xóa toàn bộ chunk theo doc_id.
 
+### Bonus Task: ChromaDB Integration
+
+- Đã thêm dependency `chromadb>=0.4.0` vào requirements.
+- `EmbeddingStore` hỗ trợ 2 chế độ: ChromaDB (ưu tiên) và in-memory (fallback).
+- Chế độ ChromaDB đã được tích hợp đầy đủ cho các hàm: `add_documents`, `search`, `search_with_filter`, `delete_document`, `get_collection_size`.
+- Metadata được chuẩn hóa để tương thích với ràng buộc kiểu dữ liệu của ChromaDB.
+- Đã xử lý ổn định việc thêm nhiều lượt documents và xóa theo `doc_id` trong chế độ chunk-level.
+
 ### KnowledgeBaseAgent
 
 - answer(question, top_k, metadata_filter=None).
@@ -134,8 +142,9 @@ Luồng benchmark và agent đã hỗ trợ filter qua search_with_filter.
 
 ### Test Results
 
-- Tổng test pass: 44/44.
+- Tổng test pass: 44/44. (Cả test cũ và test mới đều pass)
 - Lệnh: python -m pytest -q
+- Trạng thái bonus: test suite vẫn pass sau khi bật ChromaDB integration.
 
 ---
 
@@ -216,4 +225,5 @@ Luồng benchmark và agent đã hỗ trợ filter qua search_with_filter.
 | Results | Cá nhân | 9 / 10 |
 | Core implementation (tests) | Cá nhân | 30 / 30 |
 | Demo | Nhóm | 4 / 5 |
-| **Tổng** | | **88 / 100 (theo kết quả hiện tại)** |
+| Bonus task (ChromaDB) | Cá nhân | 5 / 5 |
+| **Tổng** | | 93 / 100 (theo kết quả hiện tại)** |
