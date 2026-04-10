@@ -21,12 +21,15 @@ class KnowledgeBaseAgent:
         self.llm_fn = llm_fn
         # self.conversation_history: list[tuple[str, str]] = []  # List of (question, answer) pairs
 
-    def answer(self, question: str, top_k: int = 3) -> str:
+    def answer(self, question: str, top_k: int = 3, metadata_filter: dict | None = None) -> str:
         """
         Retrieve chunks, build a prompt, and call the LLM function to generate an answer.
         """
         # Step 1: Retrieve top-k relevant chunks from the store
-        relevant_chunks = self.store.search(query=question, top_k=top_k)
+        if metadata_filter:
+            relevant_chunks = self.store.search_with_filter(query=question, top_k=top_k, metadata_filter=metadata_filter)
+        else:
+            relevant_chunks = self.store.search(query=question, top_k=top_k)
 
         # Step 2: Build a prompt with the chunks as context
         context = "\n".join(chunk["content"] for chunk in relevant_chunks)
